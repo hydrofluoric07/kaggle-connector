@@ -1,0 +1,16 @@
+src/**
+test/**
+node_modules/**
+colab-vscode/**
+esbuild.mjs
+tsconfig.json
+package-lock.json
+.vscode/**
+.claude/**
+.git/**
+.gitignore
+CLAUDE.md
+**/*.map
+*.py
+*.ipynb
+*.vsix

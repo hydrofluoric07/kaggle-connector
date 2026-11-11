@@ -1,0 +1,346 @@
+{
+  "name": "kaggle-connector",
+  "displayName": "Kaggle Connector",
+  "description": "右键把本地文件/文件夹上传到当前 Kaggle Jupyter 会话，支持多选、保留相对路径和文件夹递归上传。",
+  "version": "0.6.18",
+  "publisher": "local-dev",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other",
+    "Data Science"
+  ],
+  "keywords": [
+    "kaggle",
+    "jupyter",
+    "upload",
+    "notebook"
+  ],
+  "main": "./dist/extension.js",
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "kaggleConnector.upload",
+        "title": "上传到 Kaggle",
+        "category": "Kaggle Connector",
+        "enablement": "kaggleConnector.connected"
+      },
+      {
+        "command": "kaggleConnector.uploadCurrent",
+        "title": "上传当前文件到 Kaggle",
+        "category": "Kaggle Connector"
+      },
+      {
+        "command": "kaggleConnector.setServerUrl",
+        "title": "设置 Jupyter URL",
+        "category": "Kaggle Connector",
+        "icon": "$(key)"
+      },
+      {
+        "command": "kaggleConnector.setRemoteDir",
+        "title": "设置工作目录 (REMOTE_DIR)",
+        "category": "Kaggle Connector",
+        "icon": "$(folder)"
+      },
+      {
+        "command": "kaggleConnector.testConnection",
+        "title": "测试 Kaggle 连接",
+        "category": "Kaggle Connector",
+        "icon": "$(debug-start)"
+      },
+      {
+        "command": "kaggleConnector.clearServerUrl",
+        "title": "清除 Jupyter URL",
+        "category": "Kaggle Connector"
+      },
+      {
+        "command": "kaggleConnector.saveRemoteNow",
+        "title": "保存远端文件并立即上传",
+        "category": "Kaggle Connector"
+      },
+      {
+        "command": "kaggleConnector.syncKernelWorkingDir",
+        "title": "同步远端内核工作目录",
+        "category": "Kaggle Connector"
+      },
+      {
+        "command": "kaggleConnector.remote.refresh",
+        "title": "刷新",
+        "category": "Kaggle Workspace",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "kaggleConnector.remote.newFile",
+        "title": "新建文件...",
+        "category": "Kaggle Workspace",
+        "icon": "$(new-file)"
+      },
+      {
+        "command": "kaggleConnector.remote.newFolder",
+        "title": "新建文件夹...",
+        "category": "Kaggle Workspace",
+        "icon": "$(new-folder)"
+      }
+    ],
+    "menus": {
+      "explorer/context": [
+        {
+          "command": "kaggleConnector.upload",
+          "when": "resourceScheme == file",
+          "group": "5b_importexport@31"
+        }
+      ],
+      "editor/title/context": [
+        {
+          "command": "kaggleConnector.upload",
+          "when": "resourceScheme == file",
+          "group": "navigation@9"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "kaggleConnector.upload",
+          "when": "false"
+        },
+        {
+          "command": "kaggleConnector.uploadCurrent",
+          "when": "editorIsOpen"
+        },
+        {
+          "command": "kaggleConnector.remote.newFile",
+          "when": "false"
+        },
+        {
+          "command": "kaggleConnector.remote.newFolder",
+          "when": "false"
+        },
+        {
+          "command": "kaggleConnector.remote.refresh",
+          "when": "false"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "kaggleConnector.testConnection",
+          "when": "view == kaggleConnector.connection",
+          "group": "navigation@3"
+        },
+        {
+          "command": "kaggleConnector.remote.newFile",
+          "when": "view == kaggleConnector.workspace && kaggleConnector.connected",
+          "group": "navigation@1"
+        },
+        {
+          "command": "kaggleConnector.remote.newFolder",
+          "when": "view == kaggleConnector.workspace && kaggleConnector.connected",
+          "group": "navigation@2"
+        },
+        {
+          "command": "kaggleConnector.remote.refresh",
+          "when": "view == kaggleConnector.workspace",
+          "group": "navigation@3"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "key": "ctrl+s",
+        "mac": "cmd+s",
+        "command": "kaggleConnector.saveRemoteNow",
+        "when": "resourceScheme == kaggle-remote && editorTextFocus"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "kaggleConnector",
+          "title": "Kaggle Connector",
+          "icon": "media/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "kaggleConnector": [
+        {
+          "id": "kaggleConnector.connection",
+          "type": "webview",
+          "name": "Kaggle Connector"
+        }
+      ],
+      "explorer": [
+        {
+          "id": "kaggleConnector.workspace",
+          "type": "webview",
+          "name": "Kaggle Workspace",
+          "visibility": "visible"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Kaggle Connector",
+      "properties": {
+        "kaggleConnector.remoteDir": {
+          "type": "string",
+          "default": "",
+          "scope": "resource",
+          "description": "工作目录（相对于 Jupyter 根目录，Kaggle 上是 /kaggle/working）。不能为空，例如 news_recommender。"
+        },
+        "kaggleConnector.pathMode": {
+          "type": "string",
+          "enum": [
+            "workspaceRelative",
+            "basename"
+          ],
+          "enumDescriptions": [
+            "保留文件在工作区中的相对路径，例如 src/model/train.py -> <REMOTE_DIR>/src/model/train.py",
+            "只保留文件名，例如 src/model/train.py -> <REMOTE_DIR>/train.py"
+          ],
+          "default": "workspaceRelative",
+          "scope": "resource",
+          "description": "上传时如何计算远端路径。"
+        },
+        "kaggleConnector.exclude": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "**/.git/**",
+            "**/.ipynb_checkpoints/**",
+            "**/__pycache__/**",
+            "**/.venv/**",
+            "**/venv/**",
+            "**/node_modules/**",
+            "**/*.pyc"
+          ],
+          "scope": "resource",
+          "description": "递归上传文件夹时排除的 glob（相对于工作区或所选文件夹）。"
+        },
+        "kaggleConnector.maxFileSizeMB": {
+          "type": "number",
+          "default": 100,
+          "minimum": 0,
+          "scope": "resource",
+          "description": "单个文件大小上限（MB），0 表示不限制。超大文件会被跳过并在结果中报告。"
+        },
+        "kaggleConnector.concurrency": {
+          "type": "number",
+          "default": 4,
+          "minimum": 1,
+          "maximum": 16,
+          "scope": "resource",
+          "description": "同时上传的文件数。"
+        },
+        "kaggleConnector.proxy": {
+          "type": "string",
+          "default": "",
+          "scope": "resource",
+          "description": "HTTP/HTTPS 代理，例如 http://127.0.0.1:7890。留空时依次读取 VS Code 的 http.proxy 和 HTTPS_PROXY/HTTP_PROXY 环境变量。"
+        },
+        "kaggleConnector.requestTimeoutMs": {
+          "type": "number",
+          "default": 120000,
+          "minimum": 5000,
+          "scope": "resource",
+          "description": "单次 HTTP 请求无响应超时时间（毫秒）。"
+        },
+        "kaggleConnector.sessionProbeTimeoutMs": {
+          "type": "number",
+          "default": 5000,
+          "minimum": 1000,
+          "scope": "resource",
+          "description": "会话存活探针（GET /api/status）的硬性超时（毫秒）。失效链接可能等待约 30 秒才返回 404，超过该时间即判定为疑似失效。弱网环境可调大。"
+        },
+        "kaggleConnector.remoteUploadDebounceMs": {
+          "type": "number",
+          "default": 5000,
+          "minimum": 0,
+          "scope": "resource",
+          "description": "VS Code 自动保存开启时，远端文件上传的防抖时间（毫秒）。0 表示不防抖；自动保存关闭时始终在 Ctrl+S 后立即上传。"
+        },
+        "kaggleConnector.remoteUploadMaxDelayMs": {
+          "type": "number",
+          "default": 120000,
+          "minimum": 1000,
+          "scope": "resource",
+          "description": "远端文件连续保存时，距第一次待上传超过该时间（毫秒）就强制上传一次，避免长时间不落盘。"
+        },
+        "kaggleConnector.skipUnchanged": {
+          "type": "boolean",
+          "default": true,
+          "scope": "resource",
+          "description": "上传前检查远端文件：大小和修改时间一致时跳过；服务器返回 hash 时用 hash 校验。关闭后会重新上传所有文件。"
+        },
+        "kaggleConnector.conflictPolicy": {
+          "type": "string",
+          "enum": [
+            "ask",
+            "overwrite",
+            "skipNewer"
+          ],
+          "enumDescriptions": [
+            "远端文件比本地新且内容不同时，询问覆盖、跳过还是取消。",
+            "始终覆盖远端文件。",
+            "跳过远端比本地新的文件。"
+          ],
+          "default": "ask",
+          "scope": "resource",
+          "description": "上传时如何处理远端比本地新的文件。"
+        },
+        "kaggleConnector.retryCount": {
+          "type": "number",
+          "default": 2,
+          "minimum": 0,
+          "maximum": 5,
+          "scope": "resource",
+          "description": "网络错误、超时和 5xx 响应的自动重试次数；认证/4xx 错误不会重试。"
+        },
+        "kaggleConnector.keepAlive": {
+          "type": "boolean",
+          "default": true,
+          "scope": "resource",
+          "description": "是否在后台定期向 Kaggle Jupyter Server 发送请求以保活会话，防止因闲置超过 40 分钟被 Kaggle 释放资源。"
+        },
+        "kaggleConnector.keepAliveIntervalMinutes": {
+          "type": "number",
+          "default": 10,
+          "minimum": 1,
+          "maximum": 30,
+          "scope": "resource",
+          "description": "保活请求的发送间隔（分钟）。默认 10 分钟。"
+        },
+        "kaggleConnector.autoCdRemoteDir": {
+          "type": "boolean",
+          "default": true,
+          "scope": "resource",
+          "description": "连接或启动远端 Python 内核时，自动将工作目录切换到 REMOTE_DIR 并将该目录加入 sys.path 与 PYTHONPATH。"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run build",
+    "build": "node esbuild.mjs",
+    "watch": "node esbuild.mjs --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "node --import tsx --test test/paths.test.ts test/errors.test.ts test/client.test.ts test/upload.test.ts test/download.test.ts test/remoteActions.test.ts test/remoteSave.test.ts test/connectionState.test.ts test/keepAlive.test.ts test/remoteCwd.test.ts",
+    "package": "npm run typecheck && npm run build && vsce package --no-dependencies --allow-missing-repository"
+  },
+  "dependencies": {
+    "https-proxy-agent": "^7.0.6",
+    "minimatch": "^9.0.5"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "@types/vscode": "^1.85.0",
+    "@vscode/vsce": "^3.2.0",
+    "esbuild": "^0.24.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0"
+  }
+}

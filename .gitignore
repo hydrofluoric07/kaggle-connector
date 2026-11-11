@@ -1,0 +1,8 @@
+node_modules
+.vscode
+main.py
+test.ipynb
+upload_to_kaggle.py
+*.vsix
+README.md
+
